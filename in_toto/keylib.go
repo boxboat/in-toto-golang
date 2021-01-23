@@ -214,6 +214,10 @@ func parseKey(data []byte) (interface{}, error) {
 	if err == nil {
 		return key, nil
 	}
+	key, err = x509.ParseCertificate(data)
+	if err == nil {
+		return key, nil
+	}
 	return nil, ErrFailedPEMParsing
 }
 
@@ -352,6 +356,9 @@ func (k *Key) LoadKeyReader(r io.Reader, scheme string, keyIdHashAlgorithms []st
 		if err := k.setKeyComponents(pubKeyBytes, []byte{}, ecdsaKeyType, scheme, keyIdHashAlgorithms); err != nil {
 			return err
 		}
+	case *x509.Certificate:
+		k.KeyVal.Certificate = strings.TrimSpace(string(pemBytes))
+
 	default:
 		// We should never get here, because we implement all from Go supported Key Types
 		panic("unexpected Error in LoadKey function")
