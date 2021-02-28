@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -26,19 +27,27 @@ evidence for supply chain steps that cannot be carried out by a single command
 (for which ‘in-toto-run’ should be used). It returns a non-zero value on
 failure and zero otherwise.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := recordKey.LoadKey(recordKeyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
-			fmt.Println("Invalid Key Error:", err.Error())
-			os.Exit(1)
-		}
+		var recordKey intoto.Key
 
-		if len(recordCertPath) > 0 {
-			var cert intoto.Key
-			if err := cert.LoadKey(recordCertPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
-				fmt.Println("Invalid Certificate Error:", err.Error())
+		if spiffeUDS != "" {
+			ctx := context.Background()
+			recordKey = intoto.GetSVID(ctx, spiffeUDS)
+
+		} else {
+			if err := recordKey.LoadKey(recordKeyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+				fmt.Println("Invalid Key Error:", err.Error())
 				os.Exit(1)
 			}
 
-			recordKey.KeyVal.Certificate = cert.KeyVal.Certificate
+			if len(recordCertPath) > 0 {
+				var cert intoto.Key
+				if err := cert.LoadKey(recordCertPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+					fmt.Println("Invalid Certificate Error:", err.Error())
+					os.Exit(1)
+				}
+
+				recordKey.KeyVal.Certificate = cert.KeyVal.Certificate
+			}
 		}
 	},
 }
@@ -121,6 +130,5 @@ formats. Passing one of ‘–key’ or ‘–gpg’ is required.`)
 It is also used to associate the link with a step defined
 in an in-toto layout.`)
 	recordCmd.PersistentFlags().StringVarP(&recordCertPath, "cert", "c", "", `Path to a PEM formatted certificate that corresponds with the provided key.`)
-	recordCmd.MarkPersistentFlagRequired("key")
 	recordCmd.MarkPersistentFlagRequired("name")
 }
