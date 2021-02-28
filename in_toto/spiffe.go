@@ -27,9 +27,6 @@ func GetSVID(ctx context.Context, socketPath string) Key {
 
 	log.Printf("using svid %v", svidContext.DefaultSVID().ID.String())
 
-	parent := svidContext.Bundles.Bundles()[0].X509Authorities()[1].URIs[0]
-	log.Printf("parent svid %v", parent.String())
-
 	svid, keyBytes, err := svidContext.DefaultSVID().Marshal()
 	if err != nil {
 		log.Fatalf("Error marshaling certificate: %v", err)
