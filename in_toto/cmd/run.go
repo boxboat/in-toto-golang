@@ -34,8 +34,6 @@ with the passed key.  Returns nonzero value on failure and zero otherwise.`,
 		if spiffeUDS != "" {
 			ctx := context.Background()
 			key = intoto.GetSVID(ctx, spiffeUDS)
-			fmt.Println(key.KeyVal.Private)
-			fmt.Println(key.KeyVal.Public)
 
 		} else {
 

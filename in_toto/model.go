@@ -84,7 +84,6 @@ validateHexString is used to validate that a string passed to it contains
 only valid hexadecimal characters.
 */
 func validateHexString(str string) error {
-	fmt.Println("Here")
 	formatCheck, _ := regexp.MatchString("^[a-fA-F0-9]+$", str)
 	if !formatCheck {
 		return fmt.Errorf("%w: %s", ErrInvalidHexString, str)
@@ -292,11 +291,8 @@ of the Key, which was used to create the signature and the signature data.  The
 used signature scheme is found in the corresponding Key.
 */
 type Signature struct {
-	KeyID string `json:"keyid"`
-	Sig   string `json:"sig"`
-	// We store the certificate with the signature because we won't every key's public
-	// key as part of the layout at verification time.  Maybe instead of storing it with
-	// the signature we instead pass the cert's file along with the signed metadata?
+	KeyID       string `json:"keyid"`
+	Sig         string `json:"sig"`
 	Certificate string `json:"cert"`
 }
 

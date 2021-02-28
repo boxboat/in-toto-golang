@@ -438,7 +438,6 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 			return Signature{}, ErrKeyKeyTypeMismatch
 		}
 		curveSize := parsedKey.(*ecdsa.PrivateKey).Curve.Params().BitSize
-		fmt.Printf("%v", curveSize)
 		var hashed []byte
 		// if err := matchEcdsaScheme(curveSize, key.Scheme); err != nil {
 		// 	return Signature{}, ErrCurveSizeSchemeMismatch
@@ -461,7 +460,6 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 		// into an ASN.1 Object.
 		signatureBuffer, err = ecdsa.SignASN1(rand.Reader, parsedKey.(*ecdsa.PrivateKey), hashed[:])
 	case ed25519KeyType:
-		fmt.Println("ed25519")
 		// We do not need a scheme switch here, because ed25519
 		// only consist of sha256 and curve25519.
 		privateHex, err := hex.DecodeString(key.KeyVal.Private)

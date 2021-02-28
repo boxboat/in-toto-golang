@@ -25,15 +25,21 @@ func GetSVID(ctx context.Context, socketPath string) Key {
 		log.Fatalf("Error grabbing x.509 context: %v", err)
 	}
 
-	pubBytes, keyBytes, err := svidContext.DefaultSVID().Marshal()
+	log.Printf("using svid %v", svidContext.DefaultSVID().ID.String())
+
+	parent := svidContext.Bundles.Bundles()[0].X509Authorities()[1].URIs[0]
+	log.Printf("parent svid %v", parent.String())
+
+	svid, keyBytes, err := svidContext.DefaultSVID().Marshal()
 	if err != nil {
 		log.Fatalf("Error marshaling certificate: %v", err)
 	}
 
 	k.KeyVal.Private = string(keyBytes)
-	k.KeyVal.Public = string(pubBytes)
+	k.KeyVal.Public = string(svid)
+	k.KeyVal.Certificate = string(svid)
 	k.Scheme = ecdsaSha2nistp384
-	k.KeyType = ecdsaKeyType
+	k.KeyType = ecdsaKeyType //this should be known from the ASN.1 data
 	k.KeyIDHashAlgorithms = []string{"sha256", "sha512"}
 	err = k.generateKeyID()
 	if err != nil {
