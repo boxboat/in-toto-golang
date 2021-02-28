@@ -31,16 +31,15 @@ var signCmd = &cobra.Command{
 			layoutKey = intoto.GetSVID(ctx, spiffeUDS)
 
 		} else {
-			
-		if err := layoutKey.LoadKey(keyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
-		fmt.Println("Invalid Key Error:", err.Error())
-			os.Exit(1)
-		}
 
+			if err := layoutKey.LoadKey(keyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+				fmt.Println("Invalid Key Error:", err.Error())
+				os.Exit(1)
+			}
+		}
 		//Sign
 		block.Sign(layoutKey)
 		block.Dump(outputPath)
-
 	},
 }
 
