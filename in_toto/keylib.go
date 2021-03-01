@@ -438,9 +438,10 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 			return Signature{}, ErrKeyKeyTypeMismatch
 		}
 		curveSize := parsedKey.(*ecdsa.PrivateKey).Curve.Params().BitSize
+		fmt.Println(fmt.Sprintf("curve size: %v", curveSize))
 		var hashed []byte
 		// if err := matchEcdsaScheme(curveSize, key.Scheme); err != nil {
-		// 	return Signature{}, ErrCurveSizeSchemeMismatch
+		//   return Signature{}, ErrCurveSizeSchemeMismatch
 		// }
 		// implement https://tools.ietf.org/html/rfc5656#section-6.2.1
 		// We determine the curve size and choose the correct hashing
@@ -561,7 +562,7 @@ func VerifySignature(key Key, sig Signature, unverified []byte) error {
 		default:
 			panic("unexpected Error in VerifySignature function")
 		}
-		if ok := ecdsa.VerifyASN1(parsedKey.(*ecdsa.PublicKey), hashed, sigBytes); !ok {
+		if ok := ecdsa.VerifyASN1(parsedKey.(*ecdsa.PublicKey), hashed[:], sigBytes); !ok {
 			return ErrInvalidSignature
 		}
 	case ed25519KeyType:

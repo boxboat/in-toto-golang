@@ -856,16 +856,39 @@ func (mb *Metablock) VerifySignatureWithCertificate(sig Signature, cert *x509.Ce
 		return err
 	}
 
-	//TODO: determine what we should really use as the signature algorithm...
-	//Since we're not storing the scheme for the key in the layout, we don't know
 	hashMapping := getHashMapping()
-	hashed := hashToHex(hashMapping["sha256"](), dataCanonical)
 	sigBytes, err := hex.DecodeString(sig.Sig)
 	if err != nil {
 		return err
 	}
 
-	return rsa.VerifyPSS(cert.PublicKey.(*rsa.PublicKey), crypto.SHA256, hashed, sigBytes, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256})
+	switch cert.PublicKey.(type) {
+	case *rsa.PublicKey:
+		//TODO: determine what we should really use as the signature algorithm...
+		//Since we're not storing the scheme for the key in the layout, we don't know
+		hashed := hashToHex(hashMapping["sha256"](), dataCanonical)
+
+		return rsa.VerifyPSS(cert.PublicKey.(*rsa.PublicKey), crypto.SHA256, hashed, sigBytes, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256})
+	case *ecdsa.PublicKey:
+		var hashed []byte
+
+		curveSize := cert.PublicKey.(*ecdsa.PublicKey).Curve.Params().BitSize
+		fmt.Println(fmt.Sprintf("curve size: %v", curveSize))
+		switch {
+		case curveSize <= 256:
+			hashed = hashToHex(hashMapping["sha256"](), dataCanonical)
+		case 256 < curveSize && curveSize <= 384:
+			hashed = hashToHex(hashMapping["sha384"](), dataCanonical)
+		case curveSize > 384:
+			hashed = hashToHex(hashMapping["sha512"](), dataCanonical)
+		}
+
+		if ok := ecdsa.VerifyASN1(cert.PublicKey.(*ecdsa.PublicKey), hashed[:], sigBytes); !ok {
+			return ErrInvalidSignature
+		}
+	}
+
+	return errors.New("unknown key type")
 }
 
 // GetSignatureForKeyID returns the signature that was created by the provided keyID, if it exists.

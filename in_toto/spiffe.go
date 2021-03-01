@@ -54,12 +54,15 @@ func GetTrustBundle(ctx context.Context, socketPath string) []*x509.Certificate 
 	}
 	defer client.Close()
 
-	svidContext, err := client.FetchX509Context(ctx)
+	bundles, err := client.FetchX509Bundles(ctx)
 	if err != nil {
-		log.Fatalf("Error grabbing x.509 context: %v", err)
+		log.Fatalf("Error fetching x.509 bundles: %v", err)
 	}
 
-	bundle := svidContext.DefaultSVID().Certificates
-	// first cert in this bundle is a leaf cert, we only want the intermediates in this case
-	return bundle[1:]
+	certs := []*x509.Certificate{}
+	for _, bundle := range bundles.Bundles() {
+		certs = append(certs, bundle.X509Authorities()...)
+	}
+
+	return certs
 }
