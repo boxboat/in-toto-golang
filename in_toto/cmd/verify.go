@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -41,6 +43,32 @@ of link metadata files named ‘<step name>.<functionary keyid prefix>.link’.`
 			}
 
 			layoutKeys[pubKey.KeyID] = pubKey
+		}
+
+		if spiffeUDS != "" {
+			ctx := context.Background()
+			bundle := intoto.GetTrustBundle(ctx, spiffeUDS)
+			for i, c := range bundle {
+				certFile := fmt.Sprintf("intermediate_%v.cert.pem", i)
+				certOut, err := os.Create(certFile)
+				if err != nil {
+					fmt.Println(fmt.Sprintf("Could not write intermediate from SPIRE: %v", err))
+					os.Exit(1)
+				}
+
+				if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}); err != nil {
+					fmt.Println(fmt.Sprintf("Could not write intermediate from SPIRE: %v", err))
+					os.Exit(1)
+				}
+
+				if err := certOut.Close(); err != nil {
+					fmt.Println(fmt.Sprintf("Could not write intermediate_ from SPIRE: %v", err))
+					os.Exit(1)
+				}
+
+				intermediatePaths = append(intermediatePaths, certFile)
+			}
+
 		}
 
 		intermediatePems := make([][]byte, 0, len(intermediatePaths))

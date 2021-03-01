@@ -2,6 +2,7 @@ package in_toto
 
 import (
 	"context"
+	"crypto/x509"
 	"log"
 
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
@@ -44,4 +45,21 @@ func GetSVID(ctx context.Context, socketPath string) Key {
 	}
 
 	return k
+}
+
+func GetTrustBundle(ctx context.Context, socketPath string) []*x509.Certificate {
+	client, err := workloadapi.New(ctx, workloadapi.WithAddr(socketPath))
+	if err != nil {
+		log.Fatalf("Unable to create workload API client: %v", err)
+	}
+	defer client.Close()
+
+	svidContext, err := client.FetchX509Context(ctx)
+	if err != nil {
+		log.Fatalf("Error grabbing x.509 context: %v", err)
+	}
+
+	bundle := svidContext.DefaultSVID().Certificates
+	// first cert in this bundle is a leaf cert, we only want the intermediates in this case
+	return bundle[1:]
 }
