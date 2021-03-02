@@ -66,7 +66,23 @@ test-run: build
 
 test-verify: build test-sign test-run
 	@./bin/in-toto verify -l ./test/tmp/signed.layout -k ./certs/example.com.layout.cert.pem -i ./certs/example.com.intermediate.cert.pem -d ./test/tmp
-	
+
+
+
+
+spiffe-test-generate-layout:
+	@mkdir -p ./test/tmp
+	@./test-infra/mint-cert.sh layout
+	@mv ./layout-svid.pem ./test/tmp
+	@mv ./layout-key.pem ./test/tmp
+	@mv ./layout-bundle.pem ./test/tmp
+	$(eval rootca := $(shell  awk -v ORS='\\\\n' '1' ./test/tmp/layout-bundle.pem))
+	@cat $(LAYOUT_TMPL) | sed -e 's#{{ROOTCA}}#$(rootca)#' > ./test/tmp/spiffe.test.layout
+
+
+--spiffe-workload-api-path="unix:///run/spire/sockets/agent.sock"
+
+
 
 go-test:
 	@go test ./...
