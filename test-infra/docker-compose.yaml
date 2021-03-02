@@ -20,4 +20,5 @@ services:
         - ./spire/agent:/opt/spire/conf/agent
         - /run/spire/sockets:/run/spire/sockets
         - /proc:/proc
+        - ./certs:/certs
     command: ["-config", "/opt/spire/conf/agent/agent.conf"]
