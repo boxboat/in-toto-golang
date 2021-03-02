@@ -11,10 +11,13 @@ services:
     command: ["-config", "/opt/spire/conf/server/server.conf"]
 
   spire-agent:
+    pid: "host"
+    privileged: true
     image: gcr.io/spiffe-io/spire-agent:0.11.0
     depends_on: ["spire-server"]
     hostname: spire-agent
     volumes:
         - ./spire/agent:/opt/spire/conf/agent
         - /run/spire/sockets:/run/spire/sockets
+        - /proc:/proc
     command: ["-config", "/opt/spire/conf/agent/agent.conf"]
