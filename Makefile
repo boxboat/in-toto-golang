@@ -79,8 +79,10 @@ spiffe-test-generate-layout:
 	$(eval rootca := $(shell  awk -v ORS='\\\\n' '1' ./test/tmp/layout-bundle.pem))
 	@cat $(LAYOUT_TMPL) | sed -e 's#{{ROOTCA}}#$(rootca)#' > ./test/tmp/spiffe.test.layout
 
+test-spiffe-sign: build spiffe-test-generate-layout
+	@./bin/in-toto sign -f ./test/tmp/spiffe.test.layout -k ./test/tmp/layout-key.pem -o ./test/tmp/spiffe.signed.layout
 
---spiffe-workload-api-path="unix:///run/spire/sockets/agent.sock"
+
 
 
 
