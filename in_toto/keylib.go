@@ -516,12 +516,10 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 		default:
 			panic("unexpected Error in GenerateSignature function")
 		}
-		fmt.Println(fmt.Sprintf("hashed: %v", hashed))
 		// Generate the ecdsa signature on the same way, as we do in the securesystemslib
 		// We are marshalling the ecdsaSignature struct as ASN.1 INTEGER SEQUENCES
 		// into an ASN.1 Object.
 		signatureBuffer, err = ecdsa.SignASN1(rand.Reader, parsedKey.(*ecdsa.PrivateKey), hashed[:])
-		fmt.Println(fmt.Sprintf("signature: %v", signatureBuffer))
 	case ed25519KeyType:
 		// We do not need a scheme switch here, because ed25519
 		// only consist of sha256 and curve25519.
