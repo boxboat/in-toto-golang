@@ -1,14 +1,10 @@
 package in_toto
 
 import (
-	"crypto"
 	"crypto/ecdsa"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -298,17 +294,14 @@ type Signature struct {
 
 // GetCertificate returns the parsed x509 certificate attached to the signature,
 // if it exists.
-func (sig Signature) GetCertificate() (*x509.Certificate, error) {
+func (sig Signature) GetCertificate() (Key, error) {
+	key := Key{}
 	if len(sig.Certificate) == 0 {
-		return nil, errors.New("Signature has empty Certificate")
+		return key, errors.New("Signature has empty Certificate")
 	}
 
-	block, _ := pem.Decode([]byte(sig.Certificate))
-	if block == nil {
-		return nil, errors.New("Couldn't get certificate for signature")
-	}
-
-	return x509.ParseCertificate(block.Bytes)
+	err := key.LoadKeyReaderDefaults(strings.NewReader(sig.Certificate))
+	return key, err
 }
 
 /*
@@ -519,7 +512,17 @@ type Step struct {
 
 // CheckCertConstraints returns true if the provided certificate matches at least one
 // of the constraints for this step.
-func (s Step) CheckCertConstraints(cert *x509.Certificate) bool {
+func (s Step) CheckCertConstraints(key Key) bool {
+	_, possibleCert, err := decodeAndParse([]byte(key.KeyVal.Certificate))
+	if err != nil {
+		return false
+	}
+
+	cert, ok := possibleCert.(*x509.Certificate)
+	if !ok {
+		return false
+	}
+
 	for _, constraint := range s.CertificateConstraints {
 		if constraint.Check(cert) {
 			return true
@@ -839,56 +842,6 @@ func (mb *Metablock) VerifySignature(key Key) error {
 		return err
 	}
 	return nil
-}
-
-/*
-VerifySignatureWithCertificate uses a certificate from a signature and a root authority from the layout
-to ensure that some data was signed with a known key under our authority.
-*/
-func (mb *Metablock) VerifySignatureWithCertificate(sig Signature, cert *x509.Certificate, rootCertPool, intermediateCertPool *x509.CertPool) error {
-	chains, err := cert.Verify(x509.VerifyOptions{Roots: rootCertPool, Intermediates: intermediateCertPool})
-	if len(chains) == 0 || err != nil {
-		return errors.New("Could not verify cert for key")
-	}
-
-	dataCanonical, err := mb.GetSignableRepresentation()
-	if err != nil {
-		return err
-	}
-
-	hashMapping := getHashMapping()
-	sigBytes, err := hex.DecodeString(sig.Sig)
-	if err != nil {
-		return err
-	}
-
-	switch cert.PublicKey.(type) {
-	case *rsa.PublicKey:
-		//TODO: determine what we should really use as the signature algorithm...
-		//Since we're not storing the scheme for the key in the layout, we don't know
-		hashed := hashToHex(hashMapping["sha256"](), dataCanonical)
-
-		return rsa.VerifyPSS(cert.PublicKey.(*rsa.PublicKey), crypto.SHA256, hashed, sigBytes, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256})
-	case *ecdsa.PublicKey:
-		var hashed []byte
-
-		curveSize := cert.PublicKey.(*ecdsa.PublicKey).Curve.Params().BitSize
-		fmt.Println(fmt.Sprintf("curve size: %v", curveSize))
-		switch {
-		case curveSize <= 256:
-			hashed = hashToHex(hashMapping["sha256"](), dataCanonical)
-		case 256 < curveSize && curveSize <= 384:
-			hashed = hashToHex(hashMapping["sha384"](), dataCanonical)
-		case curveSize > 384:
-			hashed = hashToHex(hashMapping["sha512"](), dataCanonical)
-		}
-
-		if ok := ecdsa.VerifyASN1(cert.PublicKey.(*ecdsa.PublicKey), hashed[:], sigBytes); !ok {
-			return ErrInvalidSignature
-		}
-	}
-
-	return errors.New("unknown key type")
 }
 
 // GetSignatureForKeyID returns the signature that was created by the provided keyID, if it exists.

@@ -522,7 +522,7 @@ func VerifyLinkSignatureThesholds(layout Layout,
 
 				// test against the root pool with the key's certificate if it has any
 				fmt.Println("testing certs")
-				if err := linkMb.VerifySignatureWithCertificate(sig, cert, rootCertPool, intermediateCertPool); err == nil {
+				if err := VerifyCertificateTrust(cert, rootCertPool, intermediateCertPool); err == nil {
 					fmt.Println(err)
 					linksPerStepVerified[signerKeyID] = linkMb
 				}

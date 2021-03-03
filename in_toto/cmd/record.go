@@ -34,14 +34,14 @@ failure and zero otherwise.`,
 			recordKey = intoto.GetSVID(ctx, spiffeUDS)
 
 		} else {
-			if err := recordKey.LoadKey(recordKeyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+			if err := recordKey.LoadKeyDefaults(recordKeyPath); err != nil {
 				fmt.Println("Invalid Key Error:", err.Error())
 				os.Exit(1)
 			}
 
 			if len(recordCertPath) > 0 {
 				var cert intoto.Key
-				if err := cert.LoadKey(recordCertPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+				if err := cert.LoadKeyDefaults(recordCertPath); err != nil {
 					fmt.Println("Invalid Certificate Error:", err.Error())
 					os.Exit(1)
 				}

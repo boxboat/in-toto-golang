@@ -37,13 +37,13 @@ with the passed key.  Returns nonzero value on failure and zero otherwise.`,
 
 		} else {
 
-			if err := key.LoadKey(keyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+			if err := key.LoadKeyDefaults(keyPath); err != nil {
 				fmt.Println("Invalid Key Error:", err.Error())
 				os.Exit(1)
 			}
 
 			if len(certPath) > 0 {
-				if err := cert.LoadKey(certPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+				if err := cert.LoadKeyDefaults(certPath); err != nil {
 					fmt.Println("Invalid Certificate Error:", err.Error())
 					os.Exit(1)
 				}

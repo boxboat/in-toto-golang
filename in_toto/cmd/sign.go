@@ -32,7 +32,7 @@ var signCmd = &cobra.Command{
 
 		} else {
 
-			if err := layoutKey.LoadKey(keyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+			if err := layoutKey.LoadKeyDefaults(keyPath); err != nil {
 				fmt.Println("Invalid Key Error:", err.Error())
 				os.Exit(1)
 			}

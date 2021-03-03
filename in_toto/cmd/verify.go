@@ -37,7 +37,7 @@ of link metadata files named ‘<step name>.<functionary keyid prefix>.link’.`
 		for _, pubKeyPath := range pubKeyPaths {
 			var pubKey intoto.Key
 
-			if err := pubKey.LoadKey(pubKeyPath, "rsassa-pss-sha256", []string{"sha256", "sha512"}); err != nil {
+			if err := pubKey.LoadKeyDefaults(pubKeyPath); err != nil {
 				fmt.Println("Invalid Key Error:", err.Error())
 				os.Exit(1)
 			}
