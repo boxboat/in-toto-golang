@@ -60,7 +60,7 @@ passed materials and signs it with the passed functionary’s key.`,
 passed materials and signs it with the passed functionary’s key.
 The resulting link file is stored as ‘.<name>.<keyid prefix>.link-unfinished’.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		block, err := intoto.InTotoRecordStart(recordStepName, recordMaterialsPaths, recordKey, []string{"sha256"}, []string{})
+		block, err := intoto.InTotoRecordStart(recordStepName, recordMaterialsPaths, recordKey, []string{"sha256"}, []string{}, nil)
 		if err != nil {
 			fmt.Println("Error generating meta-block:", err.Error())
 			os.Exit(1)
@@ -91,7 +91,7 @@ file to ‘<name>.<keyid prefix>.link’.`,
 			os.Exit(1)
 		}
 
-		linkMb, err := intoto.InTotoRecordStop(prelimLinkMb, recordProductsPaths, recordKey, []string{"sha256"}, []string{})
+		linkMb, err := intoto.InTotoRecordStop(prelimLinkMb, recordProductsPaths, recordKey, []string{"sha256"}, []string{}, nil)
 		if err != nil {
 			fmt.Println("Error generating meta-block:", err.Error())
 			os.Exit(1)

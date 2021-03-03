@@ -16,6 +16,7 @@ var certPath string
 var materialsPaths []string
 var productsPaths []string
 var outDir string
+var lStripPaths []string
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -52,7 +53,7 @@ with the passed key.  Returns nonzero value on failure and zero otherwise.`,
 			}
 		}
 
-		block, err := intoto.InTotoRun(stepName, materialsPaths, productsPaths, args, key, []string{"sha256"}, []string{})
+		block, err := intoto.InTotoRun(stepName, materialsPaths, productsPaths, args, key, []string{"sha256"}, []string{}, lStripPaths)
 		if err != nil {
 			fmt.Println("Error generating meta-block:", err.Error())
 			os.Exit(1)
@@ -97,6 +98,13 @@ the provided key.`)
 	runCmd.Flags().StringVarP(&outDir,
 		"output-directory", "d", "./",
 		`directory to store link metadata`)
+	runCmd.Flags().StringArrayVar(&lStripPaths, "lstrip-paths", []string{},
+		`path prefixes used to left-strip artifact paths before storing
+them to the resulting link metadata. If multiple prefixes
+are specified, only a single prefix can match the path of
+any artifact and that is then left-stripped. All prefixes
+are checked to ensure none of them are a left substring
+of another.`)
 
 	runCmd.MarkFlagRequired("name")
 }

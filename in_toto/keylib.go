@@ -498,7 +498,6 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 			return Signature{}, ErrKeyKeyTypeMismatch
 		}
 		curveSize := parsedKey.(*ecdsa.PrivateKey).Curve.Params().BitSize
-		fmt.Println(fmt.Sprintf("curve size: %v", curveSize))
 		var hashed []byte
 		// if err := matchEcdsaScheme(curveSize, key.Scheme); err != nil {
 		//   return Signature{}, ErrCurveSizeSchemeMismatch
