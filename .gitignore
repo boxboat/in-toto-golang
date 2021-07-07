@@ -3,3 +3,6 @@
 *.srl
 *.cnf
 **/test/products
+**/test/tmp
+untar.link
+.vscode

@@ -3,19 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	"github.com/in-toto/in-toto-golang/pkg/spiffe"
 	"github.com/spf13/cobra"
 )
 
 var (
-	recordKeyPath        string
 	recordStepName       string
-	recordCertPath       string
-	recordProductsPaths  []string
 	recordMaterialsPaths []string
-	recordKey            intoto.Key
+	recordProductsPaths  []string
 )
 
 var recordCmd = &cobra.Command{
@@ -26,30 +23,7 @@ evidence for supply chain steps that cannot be carried out by a single command`,
 evidence for supply chain steps that cannot be carried out by a single command
 (for which ‘in-toto-run’ should be used). It returns a non-zero value on
 failure and zero otherwise.`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		var recordKey intoto.Key
-
-		if spiffeUDS != "" {
-			ctx := context.Background()
-			recordKey = intoto.GetSVID(ctx, spiffeUDS)
-
-		} else {
-			if err := recordKey.LoadKeyDefaults(recordKeyPath); err != nil {
-				fmt.Println("Invalid Key Error:", err.Error())
-				os.Exit(1)
-			}
-
-			if len(recordCertPath) > 0 {
-				var cert intoto.Key
-				if err := cert.LoadKeyDefaults(recordCertPath); err != nil {
-					fmt.Println("Invalid Certificate Error:", err.Error())
-					os.Exit(1)
-				}
-
-				recordKey.KeyVal.Certificate = cert.KeyVal.Certificate
-			}
-		}
-	},
+	PersistentPreRunE: recordPreRun,
 }
 
 var recordStartCmd = &cobra.Command{
@@ -59,20 +33,7 @@ passed materials and signs it with the passed functionary’s key.`,
 	Long: `Creates a preliminary link file recording the paths and hashes of the
 passed materials and signs it with the passed functionary’s key.
 The resulting link file is stored as ‘.<name>.<keyid prefix>.link-unfinished’.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		block, err := intoto.InTotoRecordStart(recordStepName, recordMaterialsPaths, recordKey, []string{"sha256"}, []string{}, nil)
-		if err != nil {
-			fmt.Println("Error generating meta-block:", err.Error())
-			os.Exit(1)
-		}
-
-		prelimLinkName := fmt.Sprintf(intoto.PreliminaryLinkNameFormat, recordStepName, recordKey.KeyID)
-		err = block.Dump(prelimLinkName)
-		if err != nil {
-			fmt.Println("Error writing meta-block:", err.Error())
-			os.Exit(1)
-		}
-	},
+	RunE: recordStart,
 }
 
 var recordStopCmd = &cobra.Command{
@@ -83,52 +44,129 @@ signed by the passed functionary’s key. If found, it records
 and adds the paths and hashes of the passed products to the
 link metadata file, updates the signature and renames the
 file to ‘<name>.<keyid prefix>.link’.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		var prelimLinkMb intoto.Metablock
-		prelimLinkName := fmt.Sprintf(intoto.PreliminaryLinkNameFormat, recordStepName, recordKey.KeyID)
-		if err := prelimLinkMb.Load(prelimLinkName); err != nil {
-			fmt.Println("Error loading meta-block:", err.Error())
-			os.Exit(1)
-		}
-
-		linkMb, err := intoto.InTotoRecordStop(prelimLinkMb, recordProductsPaths, recordKey, []string{"sha256"}, []string{}, nil)
-		if err != nil {
-			fmt.Println("Error generating meta-block:", err.Error())
-			os.Exit(1)
-		}
-
-		linkName := fmt.Sprintf(intoto.LinkNameFormat, recordStepName, recordKey.KeyID)
-		err = linkMb.Dump(linkName)
-		if err != nil {
-			fmt.Println("Error writing meta-block:", err.Error())
-			os.Exit(1)
-		}
-	},
+	RunE: recordStop,
 }
 
 func init() {
-	recordCmd.AddCommand(recordStartCmd)
-	recordStartCmd.Flags().StringArrayVarP(&recordMaterialsPaths,
-		"materials", "m", []string{},
-		`Paths to files or directories, whose paths and hashes
-are stored in the resulting link metadata before the
-command is executed. Symlinks are followed.`)
-
-	recordCmd.AddCommand(recordStopCmd)
-	recordStopCmd.Flags().StringArrayVarP(&recordProductsPaths,
-		"products", "p", []string{},
-		`Paths to files or directories, whose paths and hashes
-are stored in the resulting link metadata after the
-command is executed. Symlinks are followed.`)
-
 	rootCmd.AddCommand(recordCmd)
-	recordCmd.PersistentFlags().StringVarP(&recordKeyPath, "key", "k", "", `Path to a private key file to sign the resulting link metadata.
+
+	recordCmd.PersistentFlags().StringVarP(
+		&recordStepName,
+		"name",
+		"n",
+		"",
+		`Name for the resulting link metadata file.
+It is also used to associate the link with a step defined
+in an in-toto layout.`,
+	)
+
+	recordCmd.PersistentFlags().StringVarP(
+		&keyPath,
+		"key",
+		"k",
+		"",
+		`Path to a private key file to sign the resulting link metadata.
 The keyid prefix is used as an infix for the link metadata filename,
 i.e. ‘<name>.<keyid prefix>.link’. See ‘–key-type’ for available
-formats. Passing one of ‘–key’ or ‘–gpg’ is required.`)
-	recordCmd.PersistentFlags().StringVarP(&recordStepName, "name", "n", "", `name for the resulting link metadata file.
-It is also used to associate the link with a step defined
-in an in-toto layout.`)
-	recordCmd.PersistentFlags().StringVarP(&recordCertPath, "cert", "c", "", `Path to a PEM formatted certificate that corresponds with the provided key.`)
+formats. Passing one of ‘–key’ or ‘–gpg’ is required.`,
+	)
+
+	recordCmd.PersistentFlags().StringVarP(
+		&certPath,
+		"cert",
+		"c",
+		"",
+		`Path to a PEM formatted certificate that corresponds
+with the provided key.`,
+	)
+
 	recordCmd.MarkPersistentFlagRequired("name")
+
+	// Record Start Command
+	recordCmd.AddCommand(recordStartCmd)
+
+	recordStartCmd.Flags().StringArrayVarP(
+		&recordMaterialsPaths,
+		"materials",
+		"m",
+		[]string{},
+		`Paths to files or directories, whose paths and hashes
+are stored in the resulting link metadata before the
+command is executed. Symlinks are followed.`,
+	)
+
+	// Record Stop Command
+	recordCmd.AddCommand(recordStopCmd)
+
+	recordStopCmd.Flags().StringArrayVarP(
+		&recordProductsPaths,
+		"products",
+		"p",
+		[]string{},
+		`Paths to files or directories, whose paths and hashes
+are stored in the resulting link metadata after the
+command is executed. Symlinks are followed.`,
+	)
+}
+
+func recordPreRun(cmd *cobra.Command, args []string) error {
+	if spiffeUDS != "" {
+		ctx := context.Background()
+		var err error
+		key, err = spiffe.GetSVID(ctx, spiffeUDS)
+		if err != nil {
+			return fmt.Errorf("failed to get spiffe x.509 SVID: %w", err)
+		}
+	} else {
+		key = intoto.Key{}
+		cert = intoto.Key{}
+		if err := key.LoadKeyDefaults(keyPath); err != nil {
+			return fmt.Errorf("invalid key at %s: %w", keyPath, err)
+		}
+
+		if len(certPath) > 0 {
+			if err := cert.LoadKeyDefaults(certPath); err != nil {
+				return fmt.Errorf("invalid cert at %s: %w", certPath, err)
+			}
+
+			key.KeyVal.Certificate = cert.KeyVal.Certificate
+		}
+	}
+	return nil
+}
+
+func recordStart(cmd *cobra.Command, args []string) error {
+	block, err := intoto.InTotoRecordStart(recordStepName, recordMaterialsPaths, key, []string{"sha256"}, []string{}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create start link file: %w", err)
+	}
+
+	prelimLinkName := fmt.Sprintf(intoto.PreliminaryLinkNameFormat, recordStepName, key.KeyID)
+	err = block.Dump(prelimLinkName)
+	if err != nil {
+		return fmt.Errorf("failed to write start link file to %s: %w", prelimLinkName, err)
+	}
+
+	return nil
+}
+
+func recordStop(cmd *cobra.Command, args []string) error {
+	var prelimLinkMb intoto.Metablock
+	prelimLinkName := fmt.Sprintf(intoto.PreliminaryLinkNameFormat, recordStepName, key.KeyID)
+	if err := prelimLinkMb.Load(prelimLinkName); err != nil {
+		return fmt.Errorf("failed to load start link file at %s: %w", prelimLinkName, err)
+	}
+
+	linkMb, err := intoto.InTotoRecordStop(prelimLinkMb, recordProductsPaths, key, []string{"sha256"}, []string{}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create stop link file: %w", err)
+	}
+
+	linkName := fmt.Sprintf(intoto.LinkNameFormat, recordStepName, key.KeyID)
+	err = linkMb.Dump(linkName)
+	if err != nil {
+		return fmt.Errorf("failed to write stop link file to %s: %w", prelimLinkName, err)
+	}
+
+	return nil
 }

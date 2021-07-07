@@ -4,10 +4,18 @@ import (
 	"fmt"
 	"os"
 
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 )
 
-var spiffeUDS string
+var (
+	spiffeUDS  string
+	layoutPath string
+	keyPath    string
+	certPath   string
+	key        intoto.Key
+	cert       intoto.Key
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "in-toto",
@@ -16,10 +24,15 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&spiffeUDS, "spiffe-workload-api-path", "", "uds path for spiffe workload api")
+	rootCmd.PersistentFlags().StringVar(
+		&spiffeUDS,
+		"spiffe-workload-api-path",
+		"",
+		"uds path for spiffe workload api",
+	)
 }
 
-//Execute root
+// Execute runs the root command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

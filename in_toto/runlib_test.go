@@ -305,7 +305,7 @@ func TestRecordArtifacts(t *testing.T) {
 	}
 }
 
-func TestwaitErrToExitCode(t *testing.T) {
+func TestWaitErrToExitCode(t *testing.T) {
 	// TODO: Find way to test/mock ExitError
 	// Test exit code from error assessment
 	parameters := []error{

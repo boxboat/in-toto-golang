@@ -126,10 +126,8 @@ func TestVerifySublayouts(t *testing.T) {
 		t.Errorf("Unable to load super layout")
 	}
 
-	stepsMetadata := make(map[string]map[string]Metablock)
-	var err error
-	if stepsMetadata, err = LoadLinksForLayout(superLayoutMb.Signed.(Layout),
-		"."); err != nil {
+	stepsMetadata, err := LoadLinksForLayout(superLayoutMb.Signed.(Layout), ".")
+	if err != nil {
 		t.Errorf("Unable to load link metadata for super layout")
 	}
 
@@ -138,9 +136,9 @@ func TestVerifySublayouts(t *testing.T) {
 		t.Errorf("Unable to load layout certificates")
 	}
 
-	stepsMetadataVerified := make(map[string]map[string]Metablock)
-	if stepsMetadataVerified, err = VerifyLinkSignatureThesholds(
-		superLayoutMb.Signed.(Layout), stepsMetadata, rootCertPool, intermediateCertPool); err != nil {
+	stepsMetadataVerified, err := VerifyLinkSignatureThesholds(
+		superLayoutMb.Signed.(Layout), stepsMetadata, rootCertPool, intermediateCertPool)
+	if err != nil {
 		t.Errorf("Unable to verify link threshold values: %v", err)
 	}
 
@@ -698,7 +696,7 @@ func TestVerifyLayoutSignatures(t *testing.T) {
 	// - Not verification keys (must be at least one)
 	// - No signature found for verification key
 	layoutKeysList := []map[string]Key{{}, {layoutKey.KeyID: Key{}}}
-	expectedErrors := []string{"at least one key", "No signature found for key"}
+	expectedErrors := []string{"at least one key", "no signature found for key"}
 
 	for i := 0; i < len(layoutKeysList); i++ {
 		err := VerifyLayoutSignatures(mbLayout, layoutKeysList[i])

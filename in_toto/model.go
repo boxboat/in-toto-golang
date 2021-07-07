@@ -723,17 +723,13 @@ Load parses JSON formatted metadata at the passed path into the Metablock
 object on which it was called.  It returns an error if it cannot parse
 a valid JSON formatted Metablock that contains a Link or Layout.
 */
-func (mb *Metablock) Load(path string) (err error) {
+func (mb *Metablock) Load(path string) error {
 	// Open file and close before returning
 	jsonFile, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if closeErr := jsonFile.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}()
+	defer jsonFile.Close()
 
 	// Read entire file
 	jsonBytes, err := ioutil.ReadAll(jsonFile)
@@ -753,7 +749,7 @@ func (mb *Metablock) Load(path string) (err error) {
 	// one of them has a `null` value, which would lead to a nil pointer
 	// dereference in Unmarshal below.
 	if rawMb["signed"] == nil || rawMb["signatures"] == nil {
-		return fmt.Errorf("In-toto metadata requires 'signed' and" +
+		return fmt.Errorf("in-toto metadata requires 'signed' and" +
 			" 'signatures' parts")
 	}
 
@@ -805,11 +801,11 @@ func (mb *Metablock) Load(path string) (err error) {
 		mb.Signed = layout
 
 	} else {
-		return fmt.Errorf("The '_type' field of the 'signed' part of in-toto" +
+		return fmt.Errorf("the '_type' field of the 'signed' part of in-toto" +
 			" metadata must be one of 'link' or 'layout'")
 	}
 
-	return nil
+	return jsonFile.Close()
 }
 
 /*
@@ -874,7 +870,7 @@ func (mb *Metablock) GetSignatureForKeyID(keyID string) (Signature, error) {
 		}
 	}
 
-	return Signature{}, fmt.Errorf("No signature found for key '%s'", keyID)
+	return Signature{}, fmt.Errorf("no signature found for key '%s'", keyID)
 }
 
 /*

@@ -292,12 +292,14 @@ func (k *Key) LoadKey(path string, scheme string, KeyIDHashAlgorithms []string) 
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if closeErr := pemFile.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}()
-	return k.LoadKeyReader(pemFile, scheme, KeyIDHashAlgorithms)
+	defer pemFile.Close()
+
+	err = k.LoadKeyReader(pemFile, scheme, KeyIDHashAlgorithms)
+	if err != nil {
+		return err
+	}
+
+	return pemFile.Close()
 }
 
 func (k *Key) LoadKeyDefaults(path string) error {
@@ -305,12 +307,14 @@ func (k *Key) LoadKeyDefaults(path string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if closeErr := pemFile.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}()
-	return k.LoadKeyReaderDefaults(pemFile)
+	defer pemFile.Close()
+
+	err = k.LoadKeyReaderDefaults(pemFile)
+	if err != nil {
+		return err
+	}
+
+	return pemFile.Close()
 }
 
 // LoadKeyReader loads the key from a supplied reader. The logic matches LoadKey otherwise.
@@ -520,6 +524,9 @@ func GenerateSignature(signable []byte, key Key) (Signature, error) {
 		// We are marshalling the ecdsaSignature struct as ASN.1 INTEGER SEQUENCES
 		// into an ASN.1 Object.
 		signatureBuffer, err = ecdsa.SignASN1(rand.Reader, parsedKey.(*ecdsa.PrivateKey), hashed[:])
+		if err != nil {
+			return signature, err
+		}
 	case ed25519KeyType:
 		// We do not need a scheme switch here, because ed25519
 		// only consist of sha256 and curve25519.
@@ -660,7 +667,7 @@ func VerifyCertificateTrust(key Key, rootCertPool, intermediateCertPool *x509.Ce
 
 	chains, err := cert.Verify(x509.VerifyOptions{Roots: rootCertPool, Intermediates: intermediateCertPool})
 	if len(chains) == 0 || err != nil {
-		return errors.New("Could not verify cert for key")
+		return errors.New("could not verify cert for key")
 	}
 
 	return nil

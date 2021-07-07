@@ -296,8 +296,8 @@ func VerifyArtifacts(items []interface{},
 				case "disallow":
 					// Does not consume but errors out if artifacts were filtered
 					if len(filtered) > 0 {
-						return fmt.Errorf("Artifact verification failed for %s '%s',"+
-							" %s %s disallowed by rule %s.",
+						return fmt.Errorf("artifact verification failed for %s '%s',"+
+							" %s %s disallowed by rule %s",
 							reflect.TypeOf(itemI).Name(), itemName,
 							verificationData["srcType"], filtered.Slice(), rule)
 					}
@@ -305,8 +305,8 @@ func VerifyArtifacts(items []interface{},
 					// REQUIRE is somewhat of a weird animal that does not use
 					// patterns bur rather single filenames (for now).
 					if !queue.Has(ruleData["pattern"]) {
-						return fmt.Errorf("Artifact verification failed for %s in REQUIRE '%s',"+
-							" because %s is not in %s.", verificationData["srcType"],
+						return fmt.Errorf("artifact verification failed for %s in REQUIRE '%s',"+
+							" because %s is not in %s", verificationData["srcType"],
 							ruleData["pattern"], ruleData["pattern"], queue.Slice())
 					}
 				}
@@ -377,7 +377,7 @@ func ReduceStepsMetadata(layout Layout,
 					!reflect.DeepEqual(linkMb.Signed.(Link).Products,
 						referenceLinkMb.Signed.(Link).Products) {
 					return nil, fmt.Errorf("Link '%s' and '%s' have different"+
-						" artifacts.",
+						" artifacts",
 						fmt.Sprintf(LinkNameFormat, step.Name, referenceKeyID),
 						fmt.Sprintf(LinkNameFormat, step.Name, keyID))
 				}
@@ -430,7 +430,7 @@ func LoadLayoutCertificates(layout Layout, intermediatePems [][]byte) (*x509.Cer
 	for _, certPem := range layout.RootCas {
 		ok := rootPool.AppendCertsFromPEM([]byte(certPem))
 		if !ok {
-			return nil, nil, fmt.Errorf("Failed to load root certificates for layout.")
+			return nil, nil, fmt.Errorf("failed to load root certificates for layout")
 		}
 	}
 
@@ -438,14 +438,14 @@ func LoadLayoutCertificates(layout Layout, intermediatePems [][]byte) (*x509.Cer
 	for _, intermediatePem := range layout.IntermediateCas {
 		ok := intermediatePool.AppendCertsFromPEM([]byte(intermediatePem))
 		if !ok {
-			return nil, nil, fmt.Errorf("Failed to load intermediate certificates for layout.")
+			return nil, nil, fmt.Errorf("failed to load intermediate certificates for layout")
 		}
 	}
 
 	for _, intermediatePem := range intermediatePems {
 		ok := intermediatePool.AppendCertsFromPEM(intermediatePem)
 		if !ok {
-			return nil, nil, fmt.Errorf("Failed to load provided intermediate certificates.")
+			return nil, nil, fmt.Errorf("failed to load provided intermediate certificates")
 		}
 	}
 
@@ -549,13 +549,13 @@ func VerifyLinkSignatureThesholds(layout Layout,
 
 	// Verify threshold for each step
 	for _, step := range layout.Steps {
-		linksPerStepVerified, _ := stepsMetadataVerified[step.Name]
+		linksPerStepVerified := stepsMetadataVerified[step.Name]
 
 		if len(linksPerStepVerified) < step.Threshold {
-			linksPerStep, _ := stepsMetadata[step.Name]
-			return nil, fmt.Errorf("Step '%s' requires '%d' link metadata file(s)."+
+			linksPerStep := stepsMetadata[step.Name]
+			return nil, fmt.Errorf("step '%s' requires '%d' link metadata file(s)."+
 				" '%d' out of '%d' available link(s) have a valid signature from an"+
-				" authorized signer.", step.Name, step.Threshold,
+				" authorized signer", step.Name, step.Threshold,
 				len(linksPerStepVerified), len(linksPerStep))
 		}
 	}
@@ -619,8 +619,8 @@ func LoadLinksForLayout(layout Layout, linkDir string) (map[string]map[string]Me
 		}
 
 		if len(linksPerStep) < step.Threshold {
-			return nil, fmt.Errorf("Step '%s' requires '%d' link metadata file(s),"+
-				" found '%d'.", step.Name, step.Threshold, len(linksPerStep))
+			return nil, fmt.Errorf("step '%s' requires '%d' link metadata file(s),"+
+				" found '%d'", step.Name, step.Threshold, len(linksPerStep))
 		}
 
 		stepsMetadata[step.Name] = linksPerStep
@@ -770,9 +770,10 @@ func SubstituteParameters(layout Layout,
 
 	parameters := make([]string, 0)
 
+	re := regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+
 	for parameter, value := range parameterDictionary {
-		parameterFormatCheck, _ := regexp.MatchString("^[a-zA-Z0-9_-]+$",
-			parameter)
+		parameterFormatCheck := re.MatchString(parameter)
 		if !parameterFormatCheck {
 			return layout, fmt.Errorf("invalid format for parameter")
 		}
@@ -964,6 +965,7 @@ func InTotoVerifyWithDirectory(layoutMb Metablock, layoutKeys map[string]Key,
 	if err != nil {
 		return Metablock{}, err
 	}
+	defer f.Close()
 	// We use Readdirnames(1) for performance reasons, one child node
 	// is enough to proof that the directory is not empty
 	_, err = f.Readdirnames(1)

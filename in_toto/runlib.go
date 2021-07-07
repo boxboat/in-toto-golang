@@ -362,7 +362,7 @@ func InTotoRecordStop(prelimLinkMb Metablock, productPaths []string, key Key, ha
 
 	link, ok := prelimLinkMb.Signed.(Link)
 	if !ok {
-		return linkMb, errors.New("Invalid metadata block")
+		return linkMb, errors.New("invalid metadata block")
 	}
 
 	products, err := RecordArtifacts(productPaths, hashAlgorithms, gitignorePatterns, lStripPaths)
