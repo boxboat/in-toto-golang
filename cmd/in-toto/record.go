@@ -1,11 +1,11 @@
-package cmd
+package main
 
 import (
 	"context"
 	"fmt"
 	"os"
 
-	intoto "github.com/boxboat/in-toto-golang/in_toto"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 )
 

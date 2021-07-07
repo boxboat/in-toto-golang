@@ -2,33 +2,30 @@
 
 in-toto is a specification to provide policy and attestations for software supply chains.
 Managing the PKI around in-toto has been a major reason cited as lack of adoption.
-The project aims to provide a non-production proof of concept on integrating SPIRE PKI orchestration
-with in-toto build chain attestation.
+The project aims to provide a non-production proof of concept on integrating SPIRE PKI orchestration with in-toto build chain attestation.
 
-The integration effort required support for CA based validation of functionaries.  In-toto currently
-requires the corresponding public key for each private key used in the build attestation process.  This schema
-does not fit within most oranization PKI policy.  Validation of signatures based on certificate 
-constraints will allow end-users to integrate in-toto with existing enterprise PKI.
+The integration effort required support for CA based validation of functionaries.
+In-toto currently requires the corresponding public key for each private key used in the build attestation process.
+This schema does not fit within most organization PKI policy.
+Validation of signatures based on certificate constraints will allow end-users to integrate in-toto with existing enterprise PKI.
 
 ## Running the Demo
 
-To run the demo, pull down the source code, install Go, and run `make test-verify`
-This will use openssl to gerate a certificate chain.
+To run the demo, pull down the source code, install Go, and run `make test-verify`.
+This will use openssl to generate a certificate chain.
 
-SPIFFE compliant Leaf certificates are generated with SVIDs corresponding to functionaries.  These certificates are consumed
-by in-toto to sign link-meta data and the layout policy.
+SPIFFE compliant Leaf certificates are generated with SVIDs corresponding to functionaries.
+These certificates are consumed by in-toto to sign link-meta data and the layout policy.
 
-During the in-toto verification process, `certificate constraints` are checked to ensure
-the build step link meta-data was signed with the correct SVID.
-
+During the in-toto verification process, `certificate constraints` are checked to ensure the build step link meta-data was signed with the correct SVID.
 
 ## Building
 
-Download the source, run `make build`
+Download the source, run `make build`.
 
 ## CLI
 
-```
+```text
 Usage:
   in-toto [command]
 
@@ -45,6 +42,7 @@ Flags:
       --spiffe-workload-api-path string   uds path for spiffe workload api
 
 Use "in-toto [command] --help" for more information about a command.
+```
 
 ## Example
 
@@ -85,7 +83,8 @@ func main() {
 ```
 
 ### run
-```
+
+```text
 Executes the passed command and records paths and hashes of 'materials' (i.e.
 files before command execution) and 'products' (i.e. files after command
 execution) and stores them together with other information (executed command,
@@ -122,8 +121,10 @@ Flags:
 Global Flags:
       --spiffe-workload-api-path string   uds path for spiffe workload api
 ```
+
 ### sign
-```
+
+```text
 Provides command line interface to sign in-toto link or layout metadata
 
 Usage:
@@ -134,14 +135,16 @@ Flags:
   -h, --help            help for sign
   -k, --key string      Path to PEM formatted private key used to sign the passed 
                         root layout's signature(s). Passing exactly one key using
-                        '--layout-key' is	required.
+                        '--layout-key' is required.
   -o, --output string   Path to store metadata file to be signed
 
 Global Flags:
       --spiffe-workload-api-path string   uds path for spiffe workload api
 ```
+
 ### verify
-```
+
+```text
 in-toto-verify is the main verification tool of the suite, and 
 it is used to verify that the software supply chain of the delivered 
 product was carried out as defined in the passed in-toto supply chain 
@@ -153,7 +156,7 @@ Usage:
 
 Flags:
   -h, --help                         help for verify
-  -i, --intermediate-certs strings   Path(s) to PEM formatted certificates, used as intermediaetes to verify
+  -i, --intermediate-certs strings   Path(s) to PEM formatted certificates, used as intermediaries to verify
                                      the chain of trust to the layout's trusted root. These will be used in
                                      addition to any intermediates in the layout.
   -l, --layout string                Path to root layout specifying the software supply chain to be verified
@@ -167,10 +170,12 @@ Flags:
 
 Global Flags:
       --spiffe-workload-api-path string   uds path for spiffe workload api
- ```
- ### record
- ```
- Creates a signed link metadata file in two steps, in order to provide
+```
+
+### record
+
+```text
+Creates a signed link metadata file in two steps, in order to provide
 evidence for supply chain steps that cannot be carried out by a single command
 (for which ‘in-toto-run’ should be used). It returns a non-zero value on
 failure and zero otherwise.
@@ -197,12 +202,13 @@ Global Flags:
       --spiffe-workload-api-path string   uds path for spiffe workload api
 
 Use "in-toto record [command] --help" for more information about a command.
- ```
- 
+```
+
 ## Layout Certificate Constraints
 
-Currently only URIs and common name constraints supported
-```
+Currently only URIs and common name constraints supported:
+
+```json
 {
   "cert_constraints": [{
     "uris": ["spiffe://example.com/Something"],
@@ -216,10 +222,12 @@ Currently only URIs and common name constraints supported
 
 ## Certificate Authority
 
-The CA for the signing keys must be included in the layout.  See example
+The CA for the signing keys must be included in the layout.
+See [example layout](#example-layout).
 
 ## Example Layout
-```
+
+```json
 {
  "signatures": [
  ],

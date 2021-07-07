@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	intoto "github.com/boxboat/in-toto-golang/in_toto"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 )
 
@@ -120,7 +120,7 @@ the root layout should be loaded from. If not passed links are
 loaded from the current working directory.`)
 	verifyCmd.Flags().StringSliceVarP(&intermediatePaths,
 		"intermediate-certs", "i", []string{},
-		`Path(s) to PEM formatted certificates, used as intermediaetes to verify
+		`Path(s) to PEM formatted certificates, used as intermediaries to verify
 the chain of trust to the layout's trusted root. These will be used in
 addition to any intermediates in the layout.`)
 	verifyCmd.MarkFlagRequired("layout")

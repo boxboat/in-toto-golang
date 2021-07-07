@@ -1,11 +1,11 @@
-package cmd
+package main
 
 import (
 	"context"
 	"fmt"
 	"os"
 
-	intoto "github.com/boxboat/in-toto-golang/in_toto"
+	intoto "github.com/in-toto/in-toto-golang/in_toto"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +56,7 @@ func init() {
 		"key", "k", "",
 		`Path to PEM formatted private key used to sign the passed 
 root layout's signature(s). Passing exactly one key using
-'--layout-key' is	required.`)
+'--layout-key' is required.`)
 
 	signCmd.MarkFlagRequired("file")
 	signCmd.MarkFlagRequired("key")

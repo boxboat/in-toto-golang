@@ -14,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Build
-      run: CGO_ENABLED=0 go build -o bin/in-toto ./main.go && cd bin && tar czf in-toto.tar.gz in-toto
+      run: CGO_ENABLED=0 go build -o bin/in-toto ./cmd/in-toto/ && cd bin && tar czf in-toto.tar.gz in-toto
     - name: Create Release 
       id: create_release
       uses: actions/create-release@v1
