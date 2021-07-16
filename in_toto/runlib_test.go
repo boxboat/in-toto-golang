@@ -396,7 +396,7 @@ func TestInTotoRun(t *testing.T) {
 				Environment: map[string]interface{}{},
 			},
 			Signatures: []Signature{{
-				KeyID: "be6371bc627318218191ce0780fd3183cce6c36da02938a477d2e4dfae1804a6",
+				KeyID: "41d55e82a05090d8129880e38b9b82acb9cef4990b3594030bb674d61ec89c38",
 				Sig:   "71dfec1af747d02f6463d4baf3bb2c1d903c107470be86c12349433f780b1030e5ca36a10ee5c5d74de16344fe16b459154fd2be05a58fb556dff934d6682403",
 			}},
 		},

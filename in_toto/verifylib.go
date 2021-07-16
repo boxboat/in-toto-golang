@@ -428,7 +428,7 @@ Returned CertPools will empty in this case.
 func LoadLayoutCertificates(layout Layout, intermediatePems [][]byte) (*x509.CertPool, *x509.CertPool, error) {
 	rootPool := x509.NewCertPool()
 	for _, certPem := range layout.RootCas {
-		ok := rootPool.AppendCertsFromPEM([]byte(certPem))
+		ok := rootPool.AppendCertsFromPEM([]byte(certPem.KeyVal.Certificate))
 		if !ok {
 			return nil, nil, fmt.Errorf("failed to load root certificates for layout")
 		}
@@ -436,7 +436,7 @@ func LoadLayoutCertificates(layout Layout, intermediatePems [][]byte) (*x509.Cer
 
 	intermediatePool := x509.NewCertPool()
 	for _, intermediatePem := range layout.IntermediateCas {
-		ok := intermediatePool.AppendCertsFromPEM([]byte(intermediatePem))
+		ok := intermediatePool.AppendCertsFromPEM([]byte(intermediatePem.KeyVal.Certificate))
 		if !ok {
 			return nil, nil, fmt.Errorf("failed to load intermediate certificates for layout")
 		}

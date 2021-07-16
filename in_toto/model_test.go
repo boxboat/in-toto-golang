@@ -201,24 +201,13 @@ func TestMetablockLoadDumpLoad(t *testing.T) {
 		},
 		Signatures: []Signature{
 			{
-				KeyID: "2f89b9272acfc8f4a0a0f094d789fdb0ba798b0fe41f2f5f417c12f0085ff498",
-				Sig: "66365d379d66a2e76d39a1f048847826393127572ba43bead96419499b0256" +
-					"1a08e1cb06cf91f2addd87c30a01f776a8ccc599574bc9a2bd519558351f56cff" +
-					"a61ac4f994d0d491204ff54707937e15f9abfa97c5bda1ec1ae2a2afea63f8086" +
-					"13f4fb343b85a5a455b668b95fa3a11cb9b34219d4d6af2dd4e80a9af01023954" +
-					"a8813b510a6ff6041c3af52056d021fabbc975211b0d8ee7a429a6c22efde583d" +
-					"8ac0719fd657b398a3e02cc711897acbe8cadf32d54f47012aa44621728ede42c" +
-					"3bc95c662f9c1211df4e18da8e0f6b2de358700cea5db1e76fc61ef5a90bcebcc" +
-					"883eed2272e5ca1c8cbb09b868613b839266cd3ae346ce88439bdb5bb4c69dcb7" +
-					"398f4373f2b051adb3d44d11ef1b70c7189aa5c0e6906bf7be1228dc553390024" +
-					"c9c796316067fda7d63cf60bfac86ef2e13bbd8e4c3575683673f7cdf4639c3a5" +
-					"dc225fc0c040dbd9962a6ff51913b240544939ce2d32a5e84792c0acfa94ee07e" +
-					"88e474bf4937558d107c6ecdef5b5b3a7f3a44a657662bbc1046df3a",
+				KeyID: "2e68b8ae1b921406e9422e5f06280c5c4cb86b20c360a7ca2205b742950edae6",
+				Sig:   "7184b815e9559d77d87af088dd4bf0dbd1d483eb583d665a8a3d1ae94b0b2a1d24a16d1c4cf3163b4ab1f516fe3e601a967ae1975f0f36b6e014112c69e5d7ff9386f9904a123f6cd7a339be0ed0fcc6dacfec49e0c7b0ad883305056a4e82ac6b3e73b62a9a055b728a85c2b873257a713983badcd93d311adb0b3ecad3c78c04a5036ef2be111b38ea1851bf27208cc97368e54a1f6999df93f97e8a840fb97983f96b5916d06fe2e4e438cf131a0d7b268f0f286dcfeb25ea259958d063a08d6820feae11d6159fa63c3642dafe8722a4d332e23c2ed3ca73a55966b2c2a3b1543ce0d3a57990135466ce78c7876d810fe7f44d0ed6376806b3021b7042cb",
 			},
 		},
 	}
 
-	fnExisting := "package.2f89b927.link"
+	fnExisting := "package.2e68b8ae.link"
 	fnTmp := fnExisting + ".tmp"
 	if err := mbMemory.Dump(fnTmp); err != nil {
 		t.Errorf("JSON serialization failed: %s", err)
@@ -312,7 +301,7 @@ func TestMetablockVerifySignature(t *testing.T) {
 
 func TestValidateLink(t *testing.T) {
 	var mb Metablock
-	if err := mb.Load("package.2f89b927.link"); err != nil {
+	if err := mb.Load("package.2e68b8ae.link"); err != nil {
 		t.Errorf("Metablock load returned '%s'", err)
 	}
 	if err := validateLink(mb.Signed.(Link)); err != nil {

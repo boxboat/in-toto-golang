@@ -27,7 +27,7 @@ field may be an empty string.
 type KeyVal struct {
 	Private     string `json:"private"`
 	Public      string `json:"public"`
-	Certificate string `json:"-"` // We just use this for signing, no need to store it
+	Certificate string `json:"certificate"`
 }
 
 /*
@@ -594,8 +594,8 @@ type Layout struct {
 	Steps           []Step         `json:"steps"`
 	Inspect         []Inspection   `json:"inspect"`
 	Keys            map[string]Key `json:"keys"`
-	RootCas         []string       `json:"rootcas"`
-	IntermediateCas []string       `json:"intermediatecas"`
+	RootCas         map[string]Key `json:"rootcas"`
+	IntermediateCas map[string]Key `json:"intermediatecas"`
 	Expires         string         `json:"expires"`
 	Readme          string         `json:"readme"`
 }
@@ -620,6 +620,20 @@ func (l *Layout) inspectAsInterfaceSlice() []interface{} {
 	return inspectionsI
 }
 
+func validateLayoutKeys(keys map[string]Key) error {
+	for keyID, key := range keys {
+		if key.KeyID != keyID {
+			return fmt.Errorf("invalid key found")
+		}
+		err := validatePublicKey(key)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 /*
 validateLayout is a function used to ensure that a passed item of type Layout
 matches the necessary format.
@@ -634,21 +648,15 @@ func validateLayout(layout Layout) error {
 			" invalid or of incorrect format")
 	}
 
-	for keyID, key := range layout.Keys {
-		if key.KeyID != keyID {
-			return fmt.Errorf("invalid key found")
-		}
-		err := validatePublicKey(key)
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := validateCertificates(layout.RootCas); err != nil {
+	if err := validateLayoutKeys(layout.Keys); err != nil {
 		return err
 	}
 
-	if err := validateCertificates(layout.IntermediateCas); err != nil {
+	if err := validateLayoutKeys(layout.RootCas); err != nil {
+		return err
+	}
+
+	if err := validateLayoutKeys(layout.IntermediateCas); err != nil {
 		return err
 	}
 

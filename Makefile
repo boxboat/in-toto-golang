@@ -50,8 +50,9 @@ clean-test-files:
 
 generate_layout: leaf_certs
 	@mkdir -p ./test/tmp
-	$(eval rootca := $(shell  awk -v ORS='\\\\n' '1' ./certs/root.cert.pem))
-	@cat $(LAYOUT_TMPL) | sed -e 's#{{ROOTCA}}#$(rootca)#' > ./test/tmp/test.layout
+	$(eval rootid := $(shell ./bin/in-toto key id ./certs/root.cert.pem))
+	$(eval rootca := $(shell ./bin/in-toto key layout ./certs/root.cert.pem | sed -e 's/\\n/\\\\n/g'))
+	@cat $(LAYOUT_TMPL) | sed -e 's#{{ROOTCA}}#$(rootca)#' -e 's#{{ROOTID}}#$(rootid)#' > ./test/tmp/test.layout
 
 test: go-test test-verify test-run
 
